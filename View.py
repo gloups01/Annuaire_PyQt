@@ -27,36 +27,30 @@ class View(QMainWindow) :
 		
 		#Création toolbar
 		toolBar = self.addToolBar("Tools")
-		toolBar.setAttribute(Qt.WA_TranslucentBackground)
 		
 		#Création bar recherche
 		self.lineEditSearch = QLineEdit()
-		self.lineEditSearch.setPlaceholderText("Nom, Prénom, Mail")
+		self.lineEditSearch.setPlaceholderText("Recherche")
 		self.lineEditSearch.setStyleSheet("background-color:white")
 		toolBar.addWidget(self.lineEditSearch)
 		self.lineEditSearch.setMaximumWidth(300)
-		
-		#Création icon search
-		actionSearch = toolBar.addAction("<b>Rechercher</b> (Ctrl+J)")
-		actionSearch.setShortcut("Ctrl+J")
-		actionSearch.setIcon(QIcon("Pictures/person1.png"))
 		
 		#Création séparateur
 		toolBar.addSeparator()
 		
 		#Création icon add contact
-		self.actionAdd = QAction("<b>Ajouter</b> (Ctrl+A)",self)
+		self.actionAdd = QAction("Ajouter (Ctrl+P)",self)
 		toolBar.addAction(self.actionAdd)
-		actionSearch.setShortcut("Ctrl+A")
+		self.actionAdd.setShortcut("Ctrl+P")
 		self.actionAdd.setIcon(QIcon("Pictures/sign.png"))
 		
 		#Création icon delete contact
-		actionDelete = toolBar.addAction("<b>Supprimer</b> (DEL)")	
-		actionSearch.setShortcut("DEL")
+		actionDelete = toolBar.addAction("Supprimer (DEL)")	
+		actionDelete.setShortcut("DEL")
 		actionDelete.setIcon(QIcon("Pictures/contacts.png"))
 		
 		#Création icon quit
-		self.actionQuitter = QAction("<b>&Quitter</b> (Ctrl+Q)",self)
+		self.actionQuitter = QAction("Quitter (Ctrl+Q)",self)
 		toolBar.addAction(self.actionQuitter)
 		self.actionQuitter.setShortcut("Ctrl+Q")
 		self.actionQuitter.setIcon(QIcon("Pictures/arrows.png"))
@@ -87,39 +81,73 @@ class View(QMainWindow) :
 		displayWidget.setWidget(self.listContact)
 	
 	def widgetFormulaire(self) :
-		nom = QLabel('Nom')
-		prenom = QLabel('Prénom')
-		telephone = QLabel('Numéro de téléphone')
-		adresse = QLabel('Adresse')
-		couleur = QLabel('Couleur de peau xD')
+		"""Fonction donner à la QAction "Ajouter" de la toolbar"""
 		
-		nomEdit = QLineEdit()
-		prenomEdit = QLineEdit()
-		telephoneEdit = QLineEdit()
-		adresseEdit = QLineEdit()
-		couleurEdit = QLineEdit()
-
-		grid = QGridLayout()
-		grid.setSpacing(2)
-
-		grid.addWidget(nom, 1, 0)
-		grid.addWidget(nomEdit, 1, 1)
-
-		grid.addWidget(prenom, 2, 0)
-		grid.addWidget(prenomEdit, 2, 1)
-
-		grid.addWidget(adresse, 3, 0)
-		grid.addWidget(adresseEdit, 3, 1)
-
-		grid.addWidget(telephone, 4, 0)
-		grid.addWidget(telephoneEdit, 4, 1)
-
-		grid.addWidget(couleur, 5, 0)
-		grid.addWidget(couleurEdit, 5, 1)
-
-		QToolTip.setFont(QFont('SansSerif', 10))
-                
-		self.centralWidget.setLayout(grid)
+		#Label prénom/nom
+		labelPictureContact = QLabel()	
+		pictureContact = QPixmap("Pictures/avatar.png")
+		labelPictureContact.setPixmap(pictureContact)
+		
+		#Ajouter prénom
+		nameEdit = QLineEdit()
+		nameEdit.setMaximumWidth(200)
+		nameEdit.setPlaceholderText("Entrez le prénom")
+		
+		#Ajouter nom
+		lastnameEdit = QLineEdit()
+		lastnameEdit.setMaximumWidth(200)
+		lastnameEdit.setPlaceholderText("Entrez le nom")
+		#layout nom/prénom
+		layoutContact = QVBoxLayout()
+		layoutContact.setSpacing(10)
+		layoutContact.addWidget(nameEdit)
+		layoutContact.addWidget(lastnameEdit)
+		
+		#Label numéro
+		labelPictureMobile = QLabel()
+		pictureMobile = QPixmap("Pictures/mobile.png")
+		labelPictureMobile.setPixmap(pictureMobile)
+		
+		#Ajouter numéro
+		mobileEdit = QLineEdit()
+		mobileEdit.setMaximumWidth(200)
+		mobileEdit.setPlaceholderText("Entrez le numéro")
+		
+		#Label adresse
+		labelPictureLocation = QLabel()
+		pictureLocation = QPixmap("Pictures/web.png")
+		labelPictureLocation.setPixmap(pictureLocation)
+		
+		#Ajouter adresse
+		locationEdit = QLineEdit()
+		locationEdit.setMaximumWidth(200)
+		locationEdit.setPlaceholderText("Entrez l'adresse")
+		
+		#boutton ajouter
+		addButton = QPushButton()
+		addButton.setStyleSheet("background-image : url('Pictures/add.png')")
+		addButton.setFixedWidth(38)
+		addButton.setFixedHeight(38)
+		#layout boutton
+		layoutAddButton = QVBoxLayout()
+		layoutAddButton.addStretch(100)
+		layoutAddButton.addWidget(addButton)
+	
+		#Layout pour le formulaire
+		layoutForm = QFormLayout()
+		layoutForm.setHorizontalSpacing(30)
+		layoutForm.setVerticalSpacing(30)
+		layoutForm.setFormAlignment(Qt.AlignCenter)
+		layoutForm.setLabelAlignment(Qt.AlignRight)
+		layoutForm.addRow(labelPictureContact,layoutContact)
+		layoutForm.addRow(labelPictureMobile,mobileEdit)		
+		layoutForm.addRow(labelPictureLocation,locationEdit)	
+		
+		#Layout central
+		layoutCentral = QGridLayout()
+		layoutCentral.addLayout(layoutForm,0,0)  
+		layoutCentral.addLayout(layoutAddButton,0,1)        
+		self.centralWidget.setLayout(layoutCentral)
 		
 		
 	def connectWidgets(self) :
