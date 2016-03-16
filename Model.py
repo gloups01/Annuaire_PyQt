@@ -5,11 +5,9 @@ from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 import sqlite3
 import sys
-from View import *
 
 class Model :
-	def __init__(self,args) :
-		self.args = args
+	def __init__(self) :
 		self.db = sqlite3.connect('DataBase.db')
 		self.createDatabase()
 		
@@ -57,5 +55,33 @@ class Model :
 		self.person = cursor.fetchall()
 		self.db.commit()
     
-	def test(self):
-		QMessageBox.warning(self,"Error", "nooon")
+	def affichage(self):
+		cursor = self.db.cursor()
+		cursor.execute("""SELECT name, lastName FROM contacts""")
+		self.person = cursor.fetchall()
+		self.db.commit()
+		self.listContact.clear()
+		for row in self.person:
+		    self.listContact.addItem(row[0]+" "+row[1])
+		    
+	def supprimer(self, args):
+		self.args = args
+		contact = args.selectedItems()[0].text()
+		item = contact.split()
+		cursor = self.db.cursor()
+		cursor.execute("""DELETE FROM contacts WHERE name = ? AND lastName = ? """, (item[0],item[1]) )
+		self.db.commit()
+		self.affichage()
+		
+	def ajouter(self):
+		try:
+		    contactName = self.nameEdit.text()
+		    contactLName = self.lastnameEdit.text()
+		    contactMobile = self.mobileEdit.text()
+		    contactLocation = self.locationEdit.text()
+		    cursor = self.db.cursor()
+		    cursor.execute(""" INSERT INTO contacts(name,lastName,number,adress) VALUES(?,?,?,?)""",(contactName,contactLName,contactMobile,contactLocation))
+		    self.db.commit()
+		    self.affichage()
+		except sqlite3.IntegrityError:
+		    QMessageBox.warning(self, "Erreur", "Ce contact existe déjà !!")
