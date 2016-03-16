@@ -1,0 +1,134 @@
+#def supprimer(self):
+ #   self.view.toolbar.actionDelete.connect(self.model.suppression)
+
+import sqlite3
+
+import sys
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QPushButton, QLineEdit, QListWidget, QTextBrowser, QMessageBox
+from PyQt5.QtCore import pyqtSignal
+
+db = sqlite3.connect('DataBase.db')
+
+class Test(QMainWindow):
+
+    mysignal=pyqtSignal(QListWidget)
+    def __init__(self):
+        
+        QMainWindow.__init__(self)
+        self.create()
+        self.pool()
+        
+	
+    def create(self):
+            
+        cursor = db.cursor()
+        cursor.execute("""
+        DROP TABLE IF EXISTS contacts
+        """)
+
+        cursor.execute("""
+        CREATE TABLE contacts(
+            name TEXT NOT NULL,
+            lastName TEXT NOT NULL,
+            number TEXT NOT NULL,
+            adress TEXT NOT NULL,
+            CONSTRAINT name_unique UNIQUE (name, lastName)
+        );
+        """)
+        
+        cursor.execute("""INSERT INTO contacts(name, lastName, number, adress) VALUES(?,?,?,?)""",("Madame", "Retard","123456","Wisteria Lane"))
+            
+        cursor.execute("""INSERT INTO contacts(name, lastName, number, adress) VALUES(?,?,?,?)""",("Monsieur", "Jaloux","456123","Evergreen Terrace"))
+
+        cursor.execute("""INSERT INTO contacts(name, lastName, number, adress) VALUES(?,?,?,?)""",("Madame", "Gourmande","456789","Melrose Place"))
+
+        cursor.execute("""INSERT INTO contacts(name, lastName, number, adress) VALUES(?,?,?,?)""",("Monsieur", "Colère","123789","New Delhi"))
+
+        cursor.execute("""INSERT INTO contacts(name, lastName, number, adress) VALUES(?,?,?,?)""",("Madame", "Coquette","789456","Azerbaidjan"))    
+        
+    def affichage(self):
+        cursor = db.cursor()
+        cursor.execute("""SELECT name, lastName FROM contacts""")
+        self.person = cursor.fetchall()
+        db.commit()
+        self.liste.clear()
+        for row in self.person:
+            self.liste.addItem(row[0]+" "+row[1])
+
+    def supprimer(self, args):
+        self.args = args
+        contact = args.selectedItems()[0].text()
+        item = contact.split()
+        cursor = db.cursor()
+        cursor.execute("""DELETE FROM contacts WHERE name = ? AND lastName = ? """, (item[0],item[1]) )
+        db.commit()
+        self.affichage()
+        
+    def ajouter(self):
+        try:
+            contactName = self.line.text()
+            contactLName = self.line2.text()
+            cursor = db.cursor()
+            cursor.execute(""" INSERT INTO contacts(name,lastName) VALUES(?,?)""",(contactName,contactLName,))
+            db.commit()
+            self.affichage()
+        except sqlite3.IntegrityError:
+            QMessageBox.warning(self, "Erreur", "Ce contact existe déjà !!")
+
+    def modifier(self):
+        pass
+    #à faire après
+
+    def voirDetail(self):
+        contact = self.liste.selectedItems()[0].text()
+        item = contact.split()
+        cursor = db.cursor()
+        cursor.execute("""SELECT * FROM contacts WHERE name = ? AND lastName = ? """, (item[0],item[1]))
+        self.person = cursor.fetchall()
+        db.commit()
+        self.detail.clear()
+        for row in self.person:
+            for index in range(len(row)):
+                self.detail.addItem(row[index])
+
+    def tri(self):
+        contact = self.browser.text()
+        cursor = db.cursor()
+        cursor.execute("""SELECT * FROM contacts WHERE lastName LIKE '% \? %'ESCAPE'\'""", [contact] )
+        self.person = cursor.fetchall()
+        db.commit()
+        self.affichage()
+
+    def signal(self):
+        self.mysignal.emit(self.liste)
+        
+
+    def pool(self):            
+        w = QWidget(self)
+        self.aj = QPushButton('ajout',w)
+        self.su = QPushButton('supprimer',w)
+        self.mo = QPushButton('modifier',w)
+        self.line = QLineEdit(w)
+        self.line2 = QLineEdit(w)
+        self.browser = QLineEdit(w)
+        self.liste = QListWidget(w)
+        self.detail = QListWidget(w)
+
+        w.resize(800, 500)
+        w.move(0, 0)
+        
+        self.su.clicked.connect(self.signal)
+        self.mysignal.connect(self.supprimer())
+        self.aj.clicked.connect(self.ajouter)
+        self.liste.itemClicked.connect(self.voirDetail)
+        self.browser.textEdited.connect(self.tri)
+
+        self.liste.move(100,100)
+        self.detail.move(400,100)
+        self.aj.move(50,50)
+        self.su.move(150,50)
+        self.line.move(250,50)
+        self.line2.move(450,50)
+        self.browser.move(450,0)
+        self.affichage()
+        
