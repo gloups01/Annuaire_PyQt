@@ -8,11 +8,14 @@ from PyQt4 import QtCore
 import sys
 
 class View(QMainWindow) :
+	signalAdd = pyqtSignal(QMainWindow)
+	signalButton = pyqtSignal()
+	signalDelete = pyqtSignal(QListWidget,QMainWindow)
 
 	def __init__(self):
 		
 		QMainWindow.__init__(self)	
-		self.setWindowOpacity(0.96)
+		self.setWindowOpacity(0.9)
 		self.setWindowIcon(QIcon("Pictures/telephone.png"))	
 		self.resize(700,500)
 		self.setWindowTitle("Annuaire")
@@ -45,9 +48,10 @@ class View(QMainWindow) :
 		self.actionAdd.setIcon(QIcon("Pictures/sign.png"))
 		
 		#Création icon delete contact
-		actionDelete = toolBar.addAction("Supprimer (DEL)")	
-		actionDelete.setShortcut("DEL")
-		actionDelete.setIcon(QIcon("Pictures/contacts.png"))
+		self.actionDelete = QAction("supprimer (Ctrl+D)",self)
+		toolBar.addAction(self.actionDelete)	
+		self.actionDelete.setShortcut("Ctrl+D")
+		self.actionDelete.setIcon(QIcon("Pictures/contacts.png"))
 		
 		#Création icon quit
 		self.actionQuitter = QAction("Quitter (Ctrl+Q)",self)
@@ -65,7 +69,7 @@ class View(QMainWindow) :
 		dockDisplay = QDockWidget("Répertoire")
 		dockDisplay.setStyleSheet("background-color:white")
 		dockDisplay.setFeatures(QDockWidget.DockWidgetFloatable)
-		dockDisplay.setAllowedAreas(Qt.LeftDockWidgetArea |
+		dockDisplay.setAllowedAreas(Qt.LeftDockWidgetArea and 
 			Qt.RightDockWidgetArea)
 		self.addDockWidget(Qt.LeftDockWidgetArea,dockDisplay)
 		containDock = QWidget(dockDisplay)
@@ -80,7 +84,7 @@ class View(QMainWindow) :
 		self.listContact = QListWidget()
 		displayWidget.setWidget(self.listContact)
 	
-	def addContact(self) :
+	def widgetFormulaire(self) :
 		"""Fonction donner à la QAction "Ajouter" de la toolbar"""
 		
 		#Label prénom/nom
@@ -89,19 +93,19 @@ class View(QMainWindow) :
 		labelPictureContact.setPixmap(pictureContact)
 		
 		#Ajouter prénom
-		nameEdit = QLineEdit()
-		nameEdit.setMaximumWidth(200)
-		nameEdit.setPlaceholderText("Entrez le prénom")
+		self.nameEdit = QLineEdit()
+		self.nameEdit.setMaximumWidth(200)
+		self.nameEdit.setPlaceholderText("Entrez le prénom")
 		
 		#Ajouter nom
-		lastnameEdit = QLineEdit()
-		lastnameEdit.setMaximumWidth(200)
-		lastnameEdit.setPlaceholderText("Entrez le nom")
+		self.lastnameEdit = QLineEdit()
+		self.lastnameEdit.setMaximumWidth(200)
+		self.lastnameEdit.setPlaceholderText("Entrez le nom")
 		#layout nom/prénom
 		layoutContact = QVBoxLayout()
 		layoutContact.setSpacing(10)
-		layoutContact.addWidget(nameEdit)
-		layoutContact.addWidget(lastnameEdit)
+		layoutContact.addWidget(self.nameEdit)
+		layoutContact.addWidget(self.lastnameEdit)
 		
 		#Label numéro
 		labelPictureMobile = QLabel()
@@ -109,9 +113,9 @@ class View(QMainWindow) :
 		labelPictureMobile.setPixmap(pictureMobile)
 		
 		#Ajouter numéro
-		mobileEdit = QLineEdit()
-		mobileEdit.setMaximumWidth(200)
-		mobileEdit.setPlaceholderText("Entrez le numéro")
+		self.mobileEdit = QLineEdit()
+		self.mobileEdit.setMaximumWidth(200)
+		self.mobileEdit.setPlaceholderText("Entrez le numéro")
 		
 		#Label adresse
 		labelPictureLocation = QLabel()
@@ -119,19 +123,21 @@ class View(QMainWindow) :
 		labelPictureLocation.setPixmap(pictureLocation)
 		
 		#Ajouter adresse
-		locationEdit = QLineEdit()
-		locationEdit.setMaximumWidth(200)
-		locationEdit.setPlaceholderText("Entrez l'adresse")
+		self.locationEdit = QLineEdit()
+		self.locationEdit.setMaximumWidth(200)
+		self.locationEdit.setPlaceholderText("Entrez l'adresse")
 		
 		#boutton ajouter
-		addButton = QPushButton()
-		addButton.setStyleSheet("background-image : url('Pictures/add.png')")
-		addButton.setFixedWidth(38)
-		addButton.setFixedHeight(38)
+		self.addButton = QPushButton()
+		self.addButton.setStyleSheet("background-image : url('Pictures/add.png')")
+		self.addButton.setFixedWidth(38)
+		self.addButton.setFixedHeight(38)
+		self.connect(self.addButton,QtCore.SIGNAL("clicked()"), 
+			self.clickHandlerAdd)
 		#layout boutton
 		layoutAddButton = QVBoxLayout()
 		layoutAddButton.addStretch(100)
-		layoutAddButton.addWidget(addButton)
+		layoutAddButton.addWidget(self.addButton)
 	
 		#Layout pour le formulaire
 		layoutForm = QFormLayout()
@@ -140,28 +146,40 @@ class View(QMainWindow) :
 		layoutForm.setFormAlignment(Qt.AlignCenter)
 		layoutForm.setLabelAlignment(Qt.AlignRight)
 		layoutForm.addRow(labelPictureContact,layoutContact)
-		layoutForm.addRow(labelPictureMobile,mobileEdit)		
-		layoutForm.addRow(labelPictureLocation,locationEdit)	
+		layoutForm.addRow(labelPictureMobile,self.mobileEdit)		
+		layoutForm.addRow(labelPictureLocation,self.locationEdit)	
 		
 		#Layout central
 		layoutCentral = QGridLayout()
 		layoutCentral.addLayout(layoutForm,0,0)  
 		layoutCentral.addLayout(layoutAddButton,0,1)        
 		self.centralWidget.setLayout(layoutCentral)
+	
+	def existButton(self) :
+		self.signalButton.emit()
 		
-	def afficheContact(self) :
-		pass	
+	def clickHandlerAdd(self):
+		self.signalAdd.emit(self)
+		
+	def clickHandlerDelete(self):
+		self.signalDelete.emit(self.listContact,self)
 		
 	def connectWidgets(self) :
 		self.connect(self.actionQuitter,
 			QtCore.SIGNAL("triggered()"),self, QtCore.SLOT('close()'))
 			
 		self.connect(self.actionAdd,QtCore.SIGNAL("triggered()"), 
-			self.addContact)
+			self.existButton)
+			
+		self.connect(self.actionAdd,QtCore.SIGNAL("triggered()"), 
+			self.widgetFormulaire)
+		
+		self.connect(self.actionDelete,QtCore.SIGNAL("triggered()"), 
+			self.clickHandlerDelete)
 		
 		
 		
 		
 		
 		
-		
+

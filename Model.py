@@ -10,7 +10,6 @@ class Model :
 	def __init__(self) :
 		self.db = sqlite3.connect('DataBase.db')
 		self.createDatabase()
-		
 
 	def createDatabase(self):
 		#création et remplissage de la database
@@ -75,39 +74,53 @@ class Model :
 		self.person = cursor.fetchall()
 		self.db.commit()
     
-	def affichage(self):
+	def affichage(self,view):
 		cursor = self.db.cursor()
 		cursor.execute("""SELECT name, lastName FROM contacts""")
 		self.person = cursor.fetchall()
 		self.db.commit()
-		self.listContact.clear()
+		view.listContact.clear()
 		for row in self.person:
-		    self.listContact.addItem(row[0]+" "+row[1])
-		
+		    view.listContact.addItem(row[0]+" "+row[1])
+	
+	def voirDetail(self,view):
+		contact = view.listeContact.selectedItems()[0].text()
+		item = contact.split()
+		cursor = self.db.cursor()
+		cursor.execute("""SELECT * FROM contacts WHERE name = ? AND lastName = ? """, (item[0],item[1]))
+		self.person = cursor.fetchall()
+		self.db.commit()
+		view.nameEdit.clear()
+		view.lastnameEdit.clear()
+		view.mobileEdit.clear()
+		view.locationEdit.clear()
+		for row in self.person:
+			nameEdit.setText(row[0])
+
 		    
-	def supprimer(self, args):
-		self.args = args
-		contact = args.selectedItems()[0].text()
+	def supprimer(self, listContact,view):
+		contact = listContact.selectedItems()[0].text()
 		item = contact.split()
 		cursor = self.db.cursor()
 		cursor.execute("""DELETE FROM contacts WHERE name = ? AND lastName = ? """
 								, (item[0],item[1]) )
 		self.db.commit()
-		self.affichage()
+		self.affichage(view)
 		
-	def ajouter(self):
+	def ajouter(self,view):
 		try:
-		    contactName = self.nameEdit.text()
-		    contactLName = self.lastnameEdit.text()
-		    contactMobile = self.mobileEdit.text()
-		    contactLocation = self.locationEdit.text()
-		    cursor = self.db.cursor()
-		    cursor.execute(""" INSERT INTO contacts(name,lastName,number,adress) 
-		    					VALUES(?,?,?,?)""",
-		    					(contactName,contactLName,contactMobile,contactLocation))
-		    self.db.commit()
-		    self.affichage()
+			contactName = view.nameEdit.text()
+			contactLName = view.lastnameEdit.text()
+			contactMobile = view.mobileEdit.text()
+			contactLocation = view.locationEdit.text()
+			cursor = self.db.cursor()
+			cursor.execute(""" INSERT INTO contacts(name,lastName,number,adress) 
+				 					VALUES(?,?,?,?)""",
+				 					(contactName,contactLName,contactMobile,contactLocation))
+			self.db.commit()
+			self.affichage(view)
+		
 		except sqlite3.IntegrityError:
-		    QMessageBox.warning(self, "Erreur", "Ce contact existe déjà !!")
+		    QMessageBox.warning(view, "Erreur", "Ce contact existe déjà !!")
 
 
