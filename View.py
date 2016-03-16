@@ -8,6 +8,7 @@ from PyQt4 import QtCore
 import sys
 
 class View(QMainWindow) :
+	mySignal = pyqtSignal(QListWidget)
 
 	def __init__(self):
 		
@@ -156,8 +157,10 @@ class View(QMainWindow) :
 			
 		self.connect(self.actionAdd,QtCore.SIGNAL("triggered()"), 
 			self.widgetFormulaire)
+		self.addButton.clicked.connect(self.clickHandler)
 		
-		
+	def clickHandler(self):
+		self.mySignal.emit(self.listContact)
 		
 		
 		
