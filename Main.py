@@ -14,8 +14,8 @@ def main(args) :
 	app = QApplication(args)
 	
 	view = View()
-	model = Model(view)
-	control = Control(view)
+	model = Model()
+	control = Control(view,model)
 	
 	view.show()
 	

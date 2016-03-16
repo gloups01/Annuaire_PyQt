@@ -12,7 +12,7 @@ class View(QMainWindow) :
 	def __init__(self):
 		
 		QMainWindow.__init__(self)	
-		self.setWindowOpacity(0.9)
+		self.setWindowOpacity(0.96)
 		self.setWindowIcon(QIcon("Pictures/telephone.png"))	
 		self.resize(700,500)
 		self.setWindowTitle("Annuaire")
@@ -65,7 +65,7 @@ class View(QMainWindow) :
 		dockDisplay = QDockWidget("Répertoire")
 		dockDisplay.setStyleSheet("background-color:white")
 		dockDisplay.setFeatures(QDockWidget.DockWidgetFloatable)
-		dockDisplay.setAllowedAreas(Qt.LeftDockWidgetArea and 
+		dockDisplay.setAllowedAreas(Qt.LeftDockWidgetArea |
 			Qt.RightDockWidgetArea)
 		self.addDockWidget(Qt.LeftDockWidgetArea,dockDisplay)
 		containDock = QWidget(dockDisplay)
@@ -80,7 +80,7 @@ class View(QMainWindow) :
 		self.listContact = QListWidget()
 		displayWidget.setWidget(self.listContact)
 	
-	def widgetFormulaire(self) :
+	def addContact(self) :
 		"""Fonction donner à la QAction "Ajouter" de la toolbar"""
 		
 		#Label prénom/nom
@@ -149,13 +149,15 @@ class View(QMainWindow) :
 		layoutCentral.addLayout(layoutAddButton,0,1)        
 		self.centralWidget.setLayout(layoutCentral)
 		
+	def afficheContact(self) :
+		pass	
 		
 	def connectWidgets(self) :
 		self.connect(self.actionQuitter,
 			QtCore.SIGNAL("triggered()"),self, QtCore.SLOT('close()'))
 			
 		self.connect(self.actionAdd,QtCore.SIGNAL("triggered()"), 
-			self.widgetFormulaire)
+			self.addContact)
 		
 		
 		
