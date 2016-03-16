@@ -12,7 +12,7 @@ class Model :
 		self.args = args
 		self.db = sqlite3.connect('DataBase.db')
 		self.createDatabase()
-		self.affichage(args)
+		
 
 	def createDatabase(self):
 		#création et remplissage de la database
@@ -25,37 +25,37 @@ class Model :
 
 		cursor.execute("""
 		CREATE TABLE contacts(
-			name TEXT,
-			lastName TEXT,
-			number INT,
-			adress TEXT
+			name TEXT NOT NULL,
+			lastName TEXT NOT NULL,
+			number TEXT NOT NULL,
+			adress TEXT NOT NULL,
+			CONSTRAINT name_unique UNIQUE (name, lastName)
 			);
 		""")
-		 
-		cursor.execute("""
-		INSERT INTO contacts(name, lastName) VALUES(?,?)""",("Machin", "tac",))
+        	cursor.execute("""INSERT INTO contacts(name, lastName, number, adress) VALUES(?,?,?,?)""",("Richard", "Latan","0123456789","01 rue de l'Egalite"))
+            
+        	cursor.execute("""INSERT INTO contacts(name, lastName, number, adress) VALUES(?,?,?,?)""",("Jean", "Aymarre","0612345678","01 rue de la Fraternité"))
 
-		cursor.execute("""
-		INSERT INTO contacts(name, lastName) VALUES(?,?)""",("Bidule", "tic",))
+        	cursor.execute("""INSERT INTO contacts(name, lastName, number, adress) VALUES(?,?,?,?)""",("Claire", "Fontaine","0213456598","01 rue de la Liberté"))
 
-		cursor.execute("""
-		INSERT INTO contacts(name, lastName) VALUES(?,?)""",("Monsieur", "mme",))
+        	cursor.execute("""INSERT INTO contacts(name, lastName, number, adress) VALUES(?,?,?,?)""",("Jennifer", "Arepasser","0345678941","01 rue de la Linéarité"))
 
-		cursor.execute("""
-		INSERT INTO contacts(name, lastName) VALUES(?,?)""",("Maman", "truc",))
+        	cursor.execute("""INSERT INTO contacts(name, lastName, number, adress) VALUES(?,?,?,?)""",("Marc", "Okette","07451289456","01 avenue Bonbonville"))
+        	
+        	cursor.execute("""INSERT INTO contacts(name, lastName, number, adress) VALUES(?,?,?,?)""",("Kevin", "Tage","0123456543","Massachussetts"))
+            
+        	cursor.execute("""INSERT INTO contacts(name, lastName, number, adress) VALUES(?,?,?,?)""",("Paul", "Ho","04788856123","Australie"))
 
-		cursor.execute("""
-		INSERT INTO contacts(name, lastName) VALUES(?,?)""",("Travail", "bueno",))
+        	cursor.execute("""INSERT INTO contacts(name, lastName, number, adress) VALUES(?,?,?,?)""",("Madame", "Gourmande","0224569887","45 boulevard de ChocolateTown"))
 
-		cursor.execute("""
-		INSERT INTO contacts(name, lastName) VALUES(?,?)""",("Ecole", "kinder",))
+        	cursor.execute("""INSERT INTO contacts(name, lastName, number, adress) VALUES(?,?,?,?)""",("Monsieur", "Colère","0635646897","78 chemin de la Route"))
+
+        	cursor.execute("""INSERT INTO contacts(name, lastName, number, adress) VALUES(?,?,?,?)""",("Madame", "Coquette","07454189456","21 allée de Guillaume"))    
 
 		cursor.execute("""
 		SELECT name, lastName FROM contacts""")
 		self.person = cursor.fetchall()
 		self.db.commit()
     
-	def affichage(self,args):
-		for row in self.person:
-			self.args.listContact.addItem(row[0]+" "+row[1])
-
+	def test(self):
+		QMessageBox.warning(self,"Error", "nooon")
