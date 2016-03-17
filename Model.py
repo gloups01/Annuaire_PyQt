@@ -94,8 +94,13 @@ class Model :
 		view.lastnameEdit.clear()
 		view.mobileEdit.clear()
 		view.locationEdit.clear()
+		view.mailEdit.clear()
 		for row in self.person:
 			nameEdit.setText(row[0])
+			lastNameEdit.setText(row[1])
+			mobileEdit.setText(row[2])
+			locationEdit.setText(row[3])
+			mailEdit.setText(row[4])
 
 		    
 	def supprimer(self, listContact,view):
@@ -123,4 +128,13 @@ class Model :
 		except sqlite3.IntegrityError:
 		    QMessageBox.warning(view, "Erreur", "Ce contact existe déjà !!")
 
-
+	def tri(self,view):
+		contact = view.lineEditSearch.text()
+		cursor = self.db.cursor()
+		cursor.execute("""SELECT name,lastName FROM contacts WHERE name LIKE ? OR lastName LIKE ?""", ('%'+contact+'%','%'+contact+'%',) )
+		self.person = cursor.fetchall()
+		self.db.commit()
+		view.listContact.clear()
+		for row in self.person:
+		    view.listContact.addItem(row[0]+" "+row[1])	
+	
