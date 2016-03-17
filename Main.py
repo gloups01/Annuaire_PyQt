@@ -2,8 +2,10 @@
 #Projet_test_2
 # -*- coding: utf-8 -*-
 
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtCore import *
 from View import *
 from Model import *
 from Control import *
@@ -14,8 +16,8 @@ def main(args) :
 	app = QApplication(args)
 	
 	view = View()
-	model = Model(view)
-	control = Control(view)
+	model = Model()
+	control = Control(view,model)
 	
 	view.show()
 	
