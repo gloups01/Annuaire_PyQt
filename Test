@@ -1,11 +1,9 @@
-#def supprimer(self):
- #   self.view.toolbar.actionDelete.connect(self.model.suppression)
-
 import sqlite3
 
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QPushButton, QLineEdit, QListWidget, QTextBrowser, QMessageBox
 from PyQt5.QtCore import pyqtSignal
+from PyQt5 import QtCore
 
 db = sqlite3.connect('DataBase.db')
 
@@ -18,33 +16,36 @@ class Test(QMainWindow):
         self.create()
         self.pool()
         
-	
+#CHECK (number LIKE '%0_________%'),	
     def create(self):
             
         cursor = db.cursor()
-        cursor.execute("""
-        DROP TABLE IF EXISTS contacts
-        """)
+        #cursor.execute("""
+        #DROP TABLE IF EXISTS contacts
+        #""")
 
         cursor.execute("""
-        CREATE TABLE contacts(
-            name TEXT NOT NULL,
-            lastName TEXT NOT NULL,
-            number TEXT NOT NULL,
-            adress TEXT NOT NULL,
+        CREATE TABLE IF NOT EXISTS contacts(
+            name TEXT NOT NULL CHECK(name NOT LIKE '% %'),
+            lastName TEXT NOT NULL CHECK(lastName NOT LIKE '% %'),
+            number TEXT,
+            adress TEXT,
             CONSTRAINT name_unique UNIQUE (name, lastName)
         );
         """)
-        
-        cursor.execute("""INSERT INTO contacts(name, lastName, number, adress) VALUES(?,?,?,?)""",("Madame", "Retard","123456","Wisteria Lane"))
+        '''
+        cursor.execute("""INSERT INTO contacts(name, lastName, number, adress) VALUES(?,?,?,?)""",("Madame", "Retard","0123456412","Wisteria Lane, 91100 evry"))
             
-        cursor.execute("""INSERT INTO contacts(name, lastName, number, adress) VALUES(?,?,?,?)""",("Monsieur", "Jaloux","456123","Evergreen Terrace"))
+        cursor.execute("""INSERT INTO contacts(name, lastName, number, adress) VALUES(?,?,?,?)""",("Monsieur", "Jaloux","0123456412","Evergreen Terrace"))
 
-        cursor.execute("""INSERT INTO contacts(name, lastName, number, adress) VALUES(?,?,?,?)""",("Madame", "Gourmande","456789","Melrose Place"))
+        cursor.execute("""INSERT INTO contacts(name, lastName, number, adress) VALUES(?,?,?,?)""",("Madame", "Gourmande","0123456412","Melrose Place"))
 
-        cursor.execute("""INSERT INTO contacts(name, lastName, number, adress) VALUES(?,?,?,?)""",("Monsieur", "Colère","123789","New Delhi"))
+        cursor.execute("""INSERT INTO contacts(name, lastName, number, adress) VALUES(?,?,?,?)""",("Monsieur", "Colère","0123456412","New Delhi"))
 
-        cursor.execute("""INSERT INTO contacts(name, lastName, number, adress) VALUES(?,?,?,?)""",("Madame", "Coquette","789456","Azerbaidjan"))    
+        cursor.execute("""INSERT INTO contacts(name, lastName, number, adress) VALUES(?,?,?,?)""",("Madame", "Coquette","0123456412","Azerbaidjan"))
+
+        cursor.execute("""INSERT INTO contacts(name, lastName, number, adress) VALUES(?,?,?,?)""",("Madame", "Espace","0237894564","Alger"))
+        '''
         
     def affichage(self):
         cursor = db.cursor()
@@ -56,9 +57,8 @@ class Test(QMainWindow):
             self.liste.addItem(row[0]+" "+row[1])
 
     def supprimer(self, args):
-        self.args = args
         contact = args.selectedItems()[0].text()
-        item = contact.split()
+        item = contact.split(" ",1)
         cursor = db.cursor()
         cursor.execute("""DELETE FROM contacts WHERE name = ? AND lastName = ? """, (item[0],item[1]) )
         db.commit()
@@ -69,7 +69,7 @@ class Test(QMainWindow):
             contactName = self.line.text()
             contactLName = self.line2.text()
             cursor = db.cursor()
-            cursor.execute(""" INSERT INTO contacts(name,lastName) VALUES(?,?)""",(contactName,contactLName,))
+            cursor.execute("""INSERT INTO contacts(name,lastName) VALUES(?,?)""",(contactName,contactLName,))
             db.commit()
             self.affichage()
         except sqlite3.IntegrityError:
@@ -88,16 +88,20 @@ class Test(QMainWindow):
         db.commit()
         self.detail.clear()
         for row in self.person:
+            print(row[0], row[1])
             for index in range(len(row)):
                 self.detail.addItem(row[index])
 
     def tri(self):
         contact = self.browser.text()
         cursor = db.cursor()
-        cursor.execute("""SELECT * FROM contacts WHERE lastName LIKE '% \? %'ESCAPE'\'""", [contact] )
+        cursor.execute("""SELECT name,lastName FROM contacts WHERE name LIKE ? OR lastName LIKE ?""", ('%'+contact+'%','%'+contact+'%',) )
         self.person = cursor.fetchall()
         db.commit()
-        self.affichage()
+        self.liste.clear()
+        for row in self.person:
+            self.liste.addItem(row[0]+" "+row[1])
+        
 
     def signal(self):
         self.mysignal.emit(self.liste)
@@ -118,7 +122,7 @@ class Test(QMainWindow):
         w.move(0, 0)
         
         self.su.clicked.connect(self.signal)
-        self.mysignal.connect(self.supprimer())
+        self.mysignal.connect(self.supprimer)
         self.aj.clicked.connect(self.ajouter)
         self.liste.itemClicked.connect(self.voirDetail)
         self.browser.textEdited.connect(self.tri)
