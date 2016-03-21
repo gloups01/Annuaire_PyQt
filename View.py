@@ -5,7 +5,7 @@
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QPushButton, QLineEdit, QListWidget, QTextBrowser, QMessageBox,  QLabel, QGridLayout, QFormLayout, QAction
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import QDockWidget, QVBoxLayout, QScrollArea
-from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtGui import QIcon, QPixmap, QFont
 from PyQt5 import QtCore
 import sys
 import sip
@@ -18,6 +18,7 @@ class View(QMainWindow) :
 	signalDisplay = pyqtSignal(QMainWindow)
 	signalSearch = pyqtSignal(QMainWindow)
 	signalModify = pyqtSignal(QMainWindow)
+	signalUnlock = pyqtSignal()
 
 	def __init__(self):
 		
@@ -27,6 +28,11 @@ class View(QMainWindow) :
 		self.resize(700,500)
 		self.setWindowTitle("Annuaire")
 		self.setStyleSheet("background-color:pink")
+		self.activeLayout = 0
+		self.activeButtonAdd = 0
+		self.activeButtonEdit = 0
+		self.activeButtonSave = 0
+		self.alreadyClicked = 0
 		
 		self.createWidgets()
 		self.connectWidgets()
@@ -76,7 +82,7 @@ class View(QMainWindow) :
 		dockDisplay = QDockWidget("Répertoire")
 		dockDisplay.setStyleSheet("background-color:white")
 		dockDisplay.setFeatures(QDockWidget.DockWidgetFloatable)
-		dockDisplay.setAllowedAreas(Qt.LeftDockWidgetArea and 
+		dockDisplay.setAllowedAreas(Qt.LeftDockWidgetArea | 
 			Qt.RightDockWidgetArea)
 		self.addDockWidget(Qt.LeftDockWidgetArea,dockDisplay)
 		containDock = QWidget(dockDisplay)
@@ -94,21 +100,22 @@ class View(QMainWindow) :
 	def widgetFormulaire(self) :
 		"""Fonction donner à la QAction "Ajouter" de la toolbar"""
 		
-		if (self.centralWidget.layout()) :
-			sip.delete(self.centralWidget.layout())
+		self.deleteWidget()
 			
 		#Label prénom/nom
-		labelPictureContact = QLabel()	
+		self.labelPictureContact = QLabel("*")	
 		pictureContact = QPixmap("Pictures/avatar.png")
-		labelPictureContact.setPixmap(pictureContact)
+		self.labelPictureContact.setPixmap(pictureContact)
 		
 		#Ajouter prénom
 		self.nameEdit = QLineEdit()
+		self.nameEdit.setToolTip("Entrez un prénom sans espace")
 		self.nameEdit.setMaximumWidth(250)
 		self.nameEdit.setPlaceholderText("Entrez le prénom")
 		
 		#Ajouter nom
 		self.lastnameEdit = QLineEdit()
+		self.lastnameEdit.setToolTip("Entrez un nom sans espace")
 		self.lastnameEdit.setMaximumWidth(250)
 		self.lastnameEdit.setPlaceholderText("Entrez le nom")
 		#layout nom/prénom
@@ -118,19 +125,21 @@ class View(QMainWindow) :
 		layoutContact.addWidget(self.lastnameEdit)
 		
 		#Label numéro
-		labelPictureMobile = QLabel()
+		self.labelPictureMobile = QLabel()
 		pictureMobile = QPixmap("Pictures/mobile.png")
-		labelPictureMobile.setPixmap(pictureMobile)
+		self.labelPictureMobile.setPixmap(pictureMobile)
 		
 		#Ajouter numéro
 		self.mobileEdit = QLineEdit()
+		self.mobileEdit.setMaxLength(10)
+		self.mobileEdit.setToolTip("Entrez un numéro de 10 chiffres commencant par 0")
 		self.mobileEdit.setMaximumWidth(250)
 		self.mobileEdit.setPlaceholderText("Entrez le numéro")
 		
 		#Label mail
-		labelPictureMail = QLabel()
+		self.labelPictureMail = QLabel()
 		pictureMail = QPixmap("Pictures/mail.png")
-		labelPictureMail.setPixmap(pictureMail)
+		self.labelPictureMail.setPixmap(pictureMail)
 		
 		#Ajouter mail
 		self.mailEdit = QLineEdit()
@@ -139,9 +148,9 @@ class View(QMainWindow) :
 		
 		
 		#Label adresse
-		labelPictureLocation = QLabel()
+		self.labelPictureLocation = QLabel()
 		pictureLocation = QPixmap("Pictures/web.png")
-		labelPictureLocation.setPixmap(pictureLocation)
+		self.labelPictureLocation.setPixmap(pictureLocation)
 		
 		#Ajouter adresse
 		self.locationEdit = QLineEdit()
@@ -165,83 +174,85 @@ class View(QMainWindow) :
 		layoutForm.setVerticalSpacing(30)
 		layoutForm.setFormAlignment(Qt.AlignCenter)
 		layoutForm.setLabelAlignment(Qt.AlignRight)
-		layoutForm.addRow(labelPictureContact,layoutContact)
-		layoutForm.addRow(labelPictureMobile,self.mobileEdit)
-		layoutForm.addRow(labelPictureMail,self.mailEdit)		
-		layoutForm.addRow(labelPictureLocation,self.locationEdit)	
+		layoutForm.addRow(self.labelPictureContact,layoutContact)
+		layoutForm.addRow(self.labelPictureMobile,self.mobileEdit)
+		layoutForm.addRow(self.labelPictureMail,self.mailEdit)		
+		layoutForm.addRow(self.labelPictureLocation,self.locationEdit)	
 		
 		#Layout central
 		self.layoutCentral = QGridLayout()
 		self.layoutCentral.addLayout(layoutForm,0,0)  
 		self.layoutCentral.addLayout(layoutAddButton,0,1)        
 		self.centralWidget.setLayout(self.layoutCentral)
+		
+		self.activeButtonAdd = 1
+		self.activeLayout = 1
 	
 	def widgetDetail(self) :
-		if (self.centralWidget.layout()) :
-			sip.delete(self.centralWidget.layout())
+		self.deleteWidget()
 			
 		#Label prénom/nom
-		dLabelPictureContact = QLabel()	
-		dPictureContact = QPixmap("Pictures/avatar.png")
-		dLabelPictureContact.setPixmap(dPictureContact)
+		self.labelPictureContact = QLabel()	
+		pictureContact = QPixmap("Pictures/avatar.png")
+		self.labelPictureContact.setPixmap(pictureContact)
 		
 		#Ajouter prénom
-		self.dNameEdit = QLineEdit()
-		self.dNameEdit.setMaximumWidth(250)
-		#self.dNameEdit.setPlaceholderText("Entrez le prénom")
-		self.dNameEdit.setText(self.listContact.selectedItems()[0].text())
+		self.nameEdit = QLineEdit()
+		self.nameEdit.setMaximumWidth(250)
+		self.nameEdit.setReadOnly(1)
 		
 		#Ajouter nom
-		self.dLastnameEdit = QLineEdit()
-		self.dLastnameEdit.setMaximumWidth(250)
-		self.dLastnameEdit.setPlaceholderText("Entrez le nom")
+		self.lastnameEdit = QLineEdit()
+		self.lastnameEdit.setMaximumWidth(250)
+		self.lastnameEdit.setReadOnly(1)
 		#layout nom/prénom
-		dLayoutContact = QVBoxLayout()
-		dLayoutContact.setSpacing(10)
-		dLayoutContact.addWidget(self.dNameEdit)
-		dLayoutContact.addWidget(self.dLastnameEdit)
+		layoutContact = QVBoxLayout()
+		layoutContact.setSpacing(10)
+		layoutContact.addWidget(self.nameEdit)
+		layoutContact.addWidget(self.lastnameEdit)
 		
 		#Label numéro
-		dLabelPictureMobile = QLabel()
-		dPictureMobile = QPixmap("Pictures/mobile.png")
-		dLabelPictureMobile.setPixmap(dPictureMobile)
+		self.labelPictureMobile = QLabel()
+		pictureMobile = QPixmap("Pictures/mobile.png")
+		self.labelPictureMobile.setPixmap(pictureMobile)
 		
 		#Ajouter numéro
-		self.dMobileEdit = QLineEdit()
-		self.dMobileEdit.setMaximumWidth(250)
-		self.dMobileEdit.setPlaceholderText("Entrez le numéro")
+		self.mobileEdit = QLineEdit()
+		self.mobileEdit.setMaximumWidth(250)
+		self.mobileEdit.setReadOnly(1)
 		
 		#Label mail
-		dLabelPictureMail = QLabel()
-		dPictureMail = QPixmap("Pictures/mail.png")
-		dLabelPictureMail.setPixmap(dPictureMail)
+		self.labelPictureMail = QLabel()
+		pictureMail = QPixmap("Pictures/mail.png")
+		self.labelPictureMail.setPixmap(pictureMail)
 		
 		#Ajouter mail
-		self.dMailEdit = QLineEdit()
-		self.dMailEdit.setMaximumWidth(250)
-		self.dMailEdit.setPlaceholderText("Entrez le mail")
+		self.mailEdit = QLineEdit()
+		self.mailEdit.setPlaceholderText("champ non renseigné")
+		self.mailEdit.setMaximumWidth(250)
+		self.mailEdit.setReadOnly(1)
 		
 		#Label adresse
-		dLabelPictureLocation = QLabel()
-		dPictureLocation = QPixmap("Pictures/web.png")
-		dLabelPictureLocation.setPixmap(dPictureLocation)
+		self.labelPictureLocation = QLabel()
+		pictureLocation = QPixmap("Pictures/web.png")
+		self.labelPictureLocation.setPixmap(pictureLocation)
 		
 		#Ajouter adresse
-		self.dLocationEdit = QLineEdit()
-		self.dLocationEdit.setMaximumWidth(250)
-		self.dLocationEdit.setPlaceholderText("Entrez l'adresse")
+		self.locationEdit = QLineEdit()
+		self.locationEdit.setMaximumWidth(250)
+		self.locationEdit.setReadOnly(1)
 		
-		#boutton delete
+		#boutton edit
 		self.editButton = QPushButton()
 		self.editButton.setStyleSheet("background-image : url('Pictures/edit.png')")
 		self.editButton.setFixedWidth(38)
 		self.editButton.setFixedHeight(38)
-		self.editButton.clicked.connect(self.clickHandlerModify)
+		self.editButton.clicked.connect(self.unlock)
 
 		#layout boutton
-		dLayoutAddButton = QVBoxLayout()
-		dLayoutAddButton.addStretch(100)
-		dLayoutAddButton.addWidget(self.editButton)	
+		self.dLayoutAddButton = QVBoxLayout()
+		self.dLayoutAddButton.addStretch(100)
+		self.dLayoutAddButton.addWidget(self.editButton)	
 	
 		#Layout pour le formulaire
 		dLayoutForm = QFormLayout()
@@ -249,18 +260,127 @@ class View(QMainWindow) :
 		dLayoutForm.setVerticalSpacing(30)
 		dLayoutForm.setFormAlignment(Qt.AlignCenter)
 		dLayoutForm.setLabelAlignment(Qt.AlignRight)
-		dLayoutForm.addRow(dLabelPictureContact,dLayoutContact)
-		dLayoutForm.addRow(dLabelPictureMobile,self.dMobileEdit)	
-		dLayoutForm.addRow(dLabelPictureMail,self.dMailEdit)	
-		dLayoutForm.addRow(dLabelPictureLocation,self.dLocationEdit)	
+		dLayoutForm.addRow(self.labelPictureContact,layoutContact)
+		dLayoutForm.addRow(self.labelPictureMobile,self.mobileEdit)	
+		dLayoutForm.addRow(self.labelPictureMail,self.mailEdit)	
+		dLayoutForm.addRow(self.labelPictureLocation,self.locationEdit)	
 		
 		#Layout central
-		dLayoutCentral = QGridLayout()
-		dLayoutCentral.addLayout(dLayoutForm,0,0)  
-		dLayoutCentral.addLayout(dLayoutAddButton,0,1)        
-		self.centralWidget.setLayout(dLayoutCentral)
+		self.layoutCentral = QGridLayout()
+		self.layoutCentral.addLayout(dLayoutForm,0,0)  
+		self.layoutCentral.addLayout(self.dLayoutAddButton,0,1)        
+		self.centralWidget.setLayout(self.layoutCentral)
 		
 		self.signalDisplay.emit(self)
+		
+		self.activeButtonEdit = 1
+		self.activeLayout = 1
+	
+	def unlock(self) :
+		#delete button edit
+		self.layoutCentral.removeWidget(self.editButton)
+		self.editButton.deleteLater()
+		self.editButton = None
+		self.activeButtonEdit= 0
+		
+		self.saveButton = QPushButton()
+		self.saveButton.setStyleSheet("background-image : url('Pictures/save.png')")
+		self.saveButton.setFixedWidth(38)
+		self.saveButton.setFixedHeight(38)
+		self.saveButton.clicked.connect(self.clickHandlerModify)
+		self.activeButtonSave = 1
+		
+		
+		self.dLayoutAddButton.addWidget(self.saveButton)
+		
+		self.nameEdit.setReadOnly(0)
+		self.lastnameEdit.setReadOnly(0)
+		self.locationEdit.setReadOnly(0)
+		self.mobileEdit.setReadOnly(0)
+		self.mailEdit.setReadOnly(0)
+	
+	def deleteWidget(self) :
+		if (self.activeLayout) :
+			self.activeLayout = 0
+			#delete name edit
+			self.layoutCentral.removeWidget(self.nameEdit)
+			self.nameEdit.deleteLater()
+			self.nameEdit = None
+			#delete last name
+			self.layoutCentral.removeWidget(self.nameEdit)
+			self.lastnameEdit.deleteLater()
+			self.lastnameEdit = None
+			#delete label
+			self.layoutCentral.removeWidget(self.labelPictureContact)
+			self.labelPictureContact.deleteLater()
+			self.labelPictureContact = None
+			
+			#delete mobileedit
+			self.layoutCentral.removeWidget(self.mobileEdit)
+			self.mobileEdit.deleteLater()
+			self.mobileEdit = None
+			#delete label
+			self.layoutCentral.removeWidget(self.labelPictureMobile)
+			self.labelPictureMobile.deleteLater()
+			self.labelPictureMobile = None
+			
+			#delete mailedit
+			self.layoutCentral.removeWidget(self.mailEdit)
+			self.mailEdit.deleteLater()
+			self.mailEdit = None
+			#delete label
+			self.layoutCentral.removeWidget(self.labelPictureMail)
+			self.labelPictureMail.deleteLater()
+			self.labelPictureMail = None
+			
+			if (self.activeButtonAdd) :
+				#delete buttonAdd
+				self.layoutCentral.removeWidget(self.addButton)
+				self.addButton.deleteLater()
+				self.addButton = None
+				self.activeButtonAdd = 0
+			
+			if (self.activeButtonEdit) :
+				#delete button edit
+				self.layoutCentral.removeWidget(self.editButton)
+				self.editButton.deleteLater()
+				self.editButton = None
+				self.activeButtonEdit= 0
+			
+			if(self.activeButtonSave) :
+				#delete button save
+				self.layoutCentral.removeWidget(self.saveButton)
+				self.saveButton.deleteLater()
+				self.saveButton = None
+				self.activeButtonSave= 0
+			
+			#delete locationEdit
+			self.layoutCentral.removeWidget(self.locationEdit)
+			self.locationEdit.deleteLater()
+			self.locationEdit = None
+			#delete label
+			self.layoutCentral.removeWidget(self.labelPictureLocation)
+			self.labelPictureLocation.deleteLater()
+			self.labelPictureLocation = None
+			sip.delete(self.centralWidget.layout())
+			
+		
+	def connectWidgets(self) :
+		self.actionQuitter.triggered.connect(self.close)
+			
+		self.actionAdd.triggered.connect(self.existButton)
+			
+		self.actionAdd.triggered.connect(self.widgetFormulaire)
+			
+		self.actionDelete.triggered.connect(self.clickHandlerDelete)
+		
+		self.listContact.itemClicked.connect(self.widgetDetail)
+		
+		self.lineEditSearch.textEdited.connect(self.clickHandlerSearch)
+	
+	#############################################
+	#SIGNAUX
+	#############################################
 	
 	def existButton(self) :
 		self.signalButton.emit()
@@ -280,19 +400,3 @@ class View(QMainWindow) :
 	def clickHandlerDelete(self):
 		self.signalDelete.emit(self.listContact,self)
 		
-	def connectWidgets(self) :
-		self.actionQuitter.triggered.connect(self.close)
-			
-		self.actionAdd.triggered.connect(self.existButton)
-			
-		self.actionAdd.triggered.connect(self.widgetFormulaire)
-			
-		self.actionDelete.triggered.connect(self.clickHandlerDelete)
-		
-		self.listContact.itemClicked.connect(self.widgetDetail)
-		
-		self.lineEditSearch.textEdited.connect(self.clickHandlerSearch)
-
-		#self.editButton.triggered.connect(self.clickHandlerModify)
-		
-

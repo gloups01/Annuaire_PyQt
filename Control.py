@@ -17,24 +17,28 @@ class Control :
 		
 		self.displayContact()
 		self.searchLineEdit()
-		self.view.signalButton.connect(self.ajoutContact)
+		self.view.signalButton.connect(self.addContact)
 		self.view.signalDisplay.connect(self.model.displayDetail)
-		self.suppContact()
+		self.deleteContact()
 		self.searchContact()
+		self.editContact()
 
 	def searchLineEdit(self) :
 		if (self.view.lineEditSearch.isModified()) :
 			self.selectText = view.lineEditSearch.selectText()
 		
 	def searchContact(self) :
-		self.view.signalSearch.connect(self.model.tri)
+		self.view.signalSearch.connect(self.model.sort)
 			
 	def displayContact(self) :
-		self.model.affichage(self.view)
+		self.model.display(self.view)
 	
-	def ajoutContact(self):
-		self.view.signalAdd.connect(self.model.ajouter)
+	def addContact(self):
+		self.view.signalAdd.connect(self.model.addContact)
 		
-	def suppContact(self):
-		self.view.signalDelete.connect(self.model.supprimer)
+	def deleteContact(self):
+		self.view.signalDelete.connect(self.model.deleteContact)
+	
+	def editContact(self) :
+		self.view.signalModify.connect(self.model.modify)
 

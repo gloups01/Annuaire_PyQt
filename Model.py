@@ -1,4 +1,5 @@
-#!/usr/bin/python
+##!/usr/bin/python
+#Projet_test_2
 # -*- coding: utf-8 -*-
 
 from PyQt5.QtWidgets import *
@@ -17,23 +18,19 @@ class Model :
 		
 		#cursor.execute("""DROP TABLE contacts""")
 
-		cursor.execute("""
-        CREATE TABLE IF NOT EXISTS contacts(
-            name TEXT NOT NULL CHECK(name NOT LIKE '% %'),
-            lastName TEXT NOT NULL CHECK(lastName NOT LIKE '% %'),
-            number TEXT NOT NULL CHECK (number LIKE '%0_________%'),
-            adress TEXT NOT NULL,
-            email TEXT DEFAULT 'champ non renseigné',
-            CONSTRAINT name_unique UNIQUE (name, lastName)
+		cursor.execute(""" CREATE TABLE IF NOT EXISTS contacts(
+                                    name TEXT CHECK(name NOT LIKE '% %' AND name NOT LIKE '' ),
+                                    lastName TEXT CHECK(lastName NOT LIKE '% %' AND lastName NOT LIKE '' ),
+                                    number TEXT CHECK (number LIKE '0_________'),
+                                    adress TEXT CHECK (adress NOT LIKE '' ),
+                                    email TEXT,
+                                    CONSTRAINT name_unique UNIQUE (name, lastName)
 			);
 			""")    
-
-		cursor.execute("""
-		SELECT name, lastName FROM contacts""")
-		self.person = cursor.fetchall()
 		self.db.commit()
+		
     
-	def affichage(self,view):
+	def display(self,view):
 		cursor = self.db.cursor()
 		cursor.execute("""SELECT name, lastName FROM contacts""")
 		self.person = cursor.fetchall()
@@ -42,7 +39,7 @@ class Model :
 		for row in self.person:
 		    view.listContact.addItem(row[0]+" "+row[1])
 	
-	def tri(self,view):
+	def sort(self,view):
 		contact = view.lineEditSearch.text()
 		cursor = self.db.cursor()
 		cursor.execute("""SELECT name,lastName FROM contacts WHERE name LIKE ? OR lastName LIKE ?""", ('%'+contact+'%','%'+contact+'%',) )
@@ -60,23 +57,28 @@ class Model :
 		self.person = cursor.fetchall()
 		self.db.commit()
 		for row in self.person:
-                        view.dNameEdit.setText(row[0])
-                        view.dLastnameEdit.setText(row[1])
-                        view.dMobileEdit.setText(row[2])
-                        view.dLocationEdit.setText(row[3])
-                        view.dMailEdit.setText(row[4])
+                        view.nameEdit.setText(row[0])
+                        view.lastnameEdit.setText(row[1])
+                        view.mobileEdit.setText(row[2])
+                        view.locationEdit.setText(row[3])
+                        view.mailEdit.setText(row[4])
 
 		    
-	def supprimer(self, listContact,view):
+	def deleteContact(self, listContact,view):
 		contact = listContact.selectedItems()[0].text()
 		item = contact.split()
 		cursor = self.db.cursor()
 		cursor.execute("""DELETE FROM contacts WHERE name = ? AND lastName = ? """
 								, (item[0],item[1]) )
 		self.db.commit()
-		self.affichage(view)
+		self.display(view)
+		listContact.item(0).setSelected(1)
+		view.deleteWidget()
+		QMessageBox.information(view, "Information", "Suppression réussie")
+		view.widgetDetail()
+		self.displayDetail(view)
 		
-	def ajouter(self,view):
+	def addContact(self,view):
 		try:
 			contactName = view.nameEdit.text()
 			contactLName = view.lastnameEdit.text()
@@ -88,33 +90,44 @@ class Model :
 				 					VALUES(?,?,?,?,?)""",
 				 					(contactName,contactLName,contactMobile,contactLocation,contactMail))
 			self.db.commit()
-			self.affichage(view)
+			self.display(view)
+			
+			view.nameEdit.clear()
+			view.lastnameEdit.clear()
+			view.mobileEdit.clear()
+			view.locationEdit.clear()
+			view.mailEdit.clear()
+			
 		
-		except sqlite3.IntegrityError:
-		    QMessageBox.warning(view, "Erreur", "Ce contact existe déjà !!")
+		except sqlite3.IntegrityError as e:
+		    QMessageBox.warning(view, "Erreur", "Informations non valides, les champs nom, prénom, numéro et adresse sont obligatoires")
 
-	'''	    
-
-	def modifier(self,view):
+	def modify(self,view):
 		try:
-                        contact = view.listContact.selectedItems()[0].text()
-                        item = contact.split()
-                        cursor = self.db.cursor() 
-			contactName = view.dNameEdit.text()
-			contactLName = view.dLastnameEdit.text()
-			contactMobile = view.dMobileEdit.text()
-			contactLocation = view.dLocationEdit.text()
-			contactMail = view.dMailEdit.text()
-			cursor.execute(""" UPDATE contacts SET name = ?, lastName = ?,number = ?,adress=?,email=?) VALUES(?,?,?,?,?) WHERE name = ? AND lastName = ? """,
-				 					(contactName,contactLName,contactMobile,contactLocation,contactMail,item[0],item[1],))
+			contact = view.listContact.selectedItems()[0].text()
+			item = contact.split()
+			cursor = self.db.cursor() 
+			contactName = view.nameEdit.text()
+			contactLName = view.lastnameEdit.text()
+			contactMobile = view.mobileEdit.text()
+			contactLocation = view.locationEdit.text()
+			contactMail = view.mailEdit.text()
+			cursor.execute(""" UPDATE contacts SET name = ?, lastName = ?,number = ?,adress=?,email=? 
+					 WHERE name = ? AND lastName = ? """,
+						(contactName,contactLName,contactMobile,contactLocation,contactMail,item[0],item[1]) )
+
 			self.db.commit()
-                        view.dNameEdit.setText(contactName)
-                        view.dLastnameEdit.setText(contactLName)
-                        view.dMobileEdit.setText(contactMobile)
-                        view.dLocationEdit.setText(contactLocation)
-                        view.dMailEdit.setText(contactMail)
+			view.nameEdit.setText(contactName)
+			view.lastnameEdit.setText(contactLName)
+			view.mobileEdit.setText(contactMobile)
+			view.locationEdit.setText(contactLocation)
+			view.mailEdit.setText(contactMail)
+			self.display(view)
+			view.deleteWidget()
+			view.listContact.item(0).setSelected(1)
+			view.widgetDetail()
+			QMessageBox.information(view, "Information", "Modification réussie")
 		
 		except sqlite3.IntegrityError:
-		    QMessageBox.warning(view, "Erreur", "Ce contact existe déjà !!")		    
-        '''
+		    QMessageBox.warning(view, "Erreur", "Informations non valides, les champs nom, prénom, numéro et adresse sont obligatoires")		    
 
